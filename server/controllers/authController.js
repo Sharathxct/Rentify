@@ -1,15 +1,31 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const cloudinary = require('../config/cloudinary');
 
 const registerUser = async (req, res) => {
-    const { firstName, lastName, email, phoneNumber, password } = req.body;
     try {
-        const user = new User({ firstName, lastName, email, phoneNumber, password });
-        await user.save();
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.status(201).json({ token });
+        const { firstName, lastName, email, phoneNumber, password } = req.body;
+        let image = '';
+        if (req.file) {
+            const result = await cloudinary.uploader.upload(req.file.path);
+            image = result.secure_url;
+        }
+
+        const newUser = new User({
+            firstName,
+            lastName,
+            email,
+            phoneNumber,
+            password,
+            image,
+        });
+
+        await newUser.save();
+        const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        res.status(201).json({ user : newUser , token });
     } catch (err) {
         res.status(400).json({ error: err.message });
+        console.log(err)
     }
 };
 

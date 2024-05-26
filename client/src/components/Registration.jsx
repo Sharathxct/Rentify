@@ -5,25 +5,90 @@ import {
     Button,
     Typography,
   } from "@material-tailwind/react";
-  import { Link } from "react-router-dom";
-  import React, { useState, useRef } from 'react';
-   
-  export function Registration() {
-    const [firstname, setFirstName] = useState('');
-    const [secondname, setSecondName] = useState('');
-    const [email, setEmail] = useState('');
-    const [phNo, setPhNO] = useState('');
-    const [password, setPassword] = useState('');
-    const [imageFile, setImageFile] = useState(null);
-    const fileInputRef = useRef(null);
+  import { Link , useNavigate} from "react-router-dom";
+  import React, { useState, useRef, useEffect } from 'react';
+import { useSelector, useDispatch } from "react-redux";
+import { login } from "../redux/features/auth/userSlice";
 
+
+  import axios from 'axios'
+  
+
+  export function Registration() {
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [password, setPassword] = useState('');
+    const [image, setImage] = useState(null);
+    const fileInputRef = useRef(null);
+    const user = useSelector((state) => state.user);
+    const dispatch = useDispatch();
+
+    const navigate = useNavigate();
+
+
+    useEffect(() => {
+      const token = localStorage.getItem("token");
+  
+      if(user.user) {
+          navigate("/");
+      }
+  
+      async function checkToken() {
+        try {
+          const res = await axios.get("http://localhost:3000/api/auth/",{
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+          } );
+  
+          dispatch(login(res.data.user));
+          navigate("/");
+        } catch (error) {
+          console.log(error);
+        }
+      }
+  
+      if (token) {
+        checkToken();
+      }
+    }, []);
+
+    async function handleSubmit(e){
+      e.preventDefault();
+      // Form submission logic here
+      const formData = new FormData();
+      formData.append('firstName', firstName);
+      formData.append('lastName', lastName);
+      formData.append('email', email);
+      formData.append('phoneNumber', phoneNumber);
+      formData.append('password', password);
+      formData.append('file', image);
+
+      try {
+        const res = await axios.post('http://localhost:3000/api/auth/register', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        localStorage.setItem("token", res.data.token);
+        axios.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${localStorage.getItem("token")}`;
+        dispatch(login(res.data.user));
+        navigate("/");
+      } catch (err) {
+        console.error(err);
+      }
+    }
 
     const handleFileUpload = () => {
       fileInputRef.current.click();
     };
 
     const handleFileChange = (e) => {
-      setImageFile(e.target.files[0]);
+      setImage(e.target.files[0]);
     };
     return (
        <Card color="transparent" shadow={false} className="bg-white p-5">
@@ -45,6 +110,8 @@ import {
               labelProps={{
                 className: "before:content-none after:content-none",
               }}
+              value={firstName}
+              onChange={ (e)=>setFirstName(e.target.value) }
             />
             <Typography variant="h6" color="blue-gray" className="-mb-3">
               Second Name
@@ -56,6 +123,8 @@ import {
               labelProps={{
                 className: "before:content-none after:content-none",
               }}
+              value={lastName}
+              onChange={ (e)=>setLastName(e.target.value) }
             />
             <Typography variant="h6" color="blue-gray" className="-mb-3">
               Your Email
@@ -67,6 +136,8 @@ import {
               labelProps={{
                 className: "before:content-none after:content-none",
               }}
+              value={email}
+              onChange={(e)=>setEmail(e.target.value)}
             />
             <Typography variant="h6" color="blue-gray" className="-mb-3">
               Your Phone Number
@@ -78,6 +149,8 @@ import {
               labelProps={{
                 className: "before:content-none after:content-none",
               }}
+              value={phoneNumber}
+              onChange={(e)=>setPhoneNumber(e.target.value)}
             />
             <Typography variant="h6" color="blue-gray" className="-mb-3">
               Password
@@ -90,6 +163,8 @@ import {
               labelProps={{
                 className: "before:content-none after:content-none",
               }}
+              value={password}
+              onChange={(e)=>setPassword(e.target.value)}
             />
             <Typography variant="h6" color="blue-gray" className="-mb-3">
               Upload Profile Picture
@@ -105,12 +180,12 @@ import {
             style={{ display: 'none' }}
             onChange={handleFileChange}
           />
-          {imageFile && (
+          {image && (
             <div className="h-10 mb-5">
               <Typography variant="h6" color="blue-gray" className="">
                 Preview
               </Typography>
-              <img src={URL.createObjectURL(imageFile)} className="h-full" alt="Preview" />
+              <img src={URL.createObjectURL(image)} className="h-full" alt="Preview" />
             </div>
           )}
             
@@ -133,7 +208,7 @@ import {
             }
             containerProps={{ className: "-ml-2.5" }}
           />
-          <Button className="mt-6" fullWidth>
+          <Button className="mt-6" fullWidth onClick={(e)=>handleSubmit(e)}>
             sign up
           </Button>
          

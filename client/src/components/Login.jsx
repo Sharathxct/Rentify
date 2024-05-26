@@ -61,7 +61,6 @@ export function LoginCard() {
           password,
         }
       );
-      console.log(response);
       localStorage.setItem("token", response.data.token);
       axios.defaults.headers.common[
         "Authorization"
