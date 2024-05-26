@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Avatar } from "@material-tailwind/react";
 import { MdAccountBox } from "react-icons/md";
 import { Link } from "react-router-dom";
 import { PiSignInLight } from "react-icons/pi";
+import axios from "axios";
+import { login } from "../redux/features/auth/userSlice";
 import {
   Menu,
   MenuHandler,
@@ -23,7 +25,28 @@ export default function Navbar() {
     dispatch(logout())
     localStorage.removeItem('token')
   }
-  console.log(user)
+  // console.log(user)
+
+  useEffect(()=>{
+    const tok = localStorage.getItem('token')
+    async function checkToken(){
+      try {
+        const res = await axios.get("http://localhost:3000/api/auth/",{
+            headers: {
+              Authorization: `Bearer ${tok}`,
+            },
+        } );
+        if(res.data.user) {
+          dispatch(login(res.data.user));
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    if(tok){
+      checkToken()
+    }
+  }, [])
   return (
     <>
     <div className="flex justify-between items-center py-4 px-5 shadow-sm bg-white">
@@ -41,9 +64,9 @@ export default function Navbar() {
           <MenuHandler>
             <Avatar
               variant="circular"
-              alt="tania andrew"
+              alt="User"
               className="cursor-pointer"
-              src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1480&q=80"
+              src={ user.user ? (user.user.image) : ("https://tse2.mm.bing.net/th?id=OIP.qiXh4q8bBCFor-yKFjm2SQHaHa&pid=Api&P=0&h=180")}
             />
           </MenuHandler>
           <MenuList>
@@ -66,10 +89,10 @@ export default function Navbar() {
                   </svg>
         
                   <Typography variant="small" className="font-medium">
-                    My Profile
+                    <Link to='/add/property' > Rentify Property </Link>
                   </Typography>
                 </MenuItem>
-                <MenuItem className="flex items-center gap-2">
+                 <MenuItem className="flex items-center gap-2">
                   <svg
                     width="16"
                     height="16"
@@ -86,7 +109,7 @@ export default function Navbar() {
                   </svg>
         
                   <Typography variant="small" className="font-medium">
-                    Edit Profile
+                    My Properties
                   </Typography>
                 </MenuItem>
                 <MenuItem className="flex items-center gap-2">
@@ -106,7 +129,7 @@ export default function Navbar() {
                   </svg>
         
                   <Typography variant="small" className="font-medium">
-                    Inbox
+                    Liked Properties
                   </Typography>
                 </MenuItem>
                 <MenuItem className="flex items-center gap-2">
@@ -125,7 +148,7 @@ export default function Navbar() {
                     />
                   </svg>
                   <Typography variant="small" className="font-medium">
-                    Help
+                    Interesting properties
                   </Typography>
                 </MenuItem> 
                 <hr className="my-2 border-blue-gray-50" /> 

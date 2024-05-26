@@ -1,20 +1,31 @@
 const Property = require('../models/Property');
+const cloudinary = require('cloudinary').v2;
 
 const addProperty = async (req, res) => {
-    const { area, bedrooms, bathrooms, nearbyHospitals, nearbyColleges } = req.body;
     try {
-        const property = new Property({
+        const { area, bedrooms, bathrooms, nearbyHospitals, nearbyColleges } = req.body;
+        const imageFiles = req.files;
+
+        // Upload images to Cloudinary and get image URLs
+        const imageUrls = await Promise.all(imageFiles.map(async (file) => {
+            const result = await cloudinary.uploader.upload(file.path); // Upload file to Cloudinary
+            return result.secure_url; // Get secure URL of the uploaded image
+        }));
+
+        const newProperty = new Property({
             area,
             bedrooms,
             bathrooms,
             nearbyHospitals,
             nearbyColleges,
-            postedBy: req.user.id
+            postedBy : req.user.id,
+            images: imageUrls,
         });
-        await property.save();
-        res.status(201).json(property);
+
+        await newProperty.save();
+        res.status(201).json({ message: 'Property created successfully', property: newProperty });
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        res.status(500).json({ error: err.message });
     }
 };
 
@@ -60,4 +71,13 @@ const getProperties = async (req, res) => {
     }
 };
 
-module.exports = { addProperty, editProperty, deleteProperty, getProperties };
+const getProperty = async (req, res) => {
+    try {
+        const property = await Property.findById(req.params.id);
+        res.json(property);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
+
+module.exports = { addProperty, editProperty, deleteProperty, getProperties, getProperty };

@@ -7,7 +7,8 @@ const PropertySchema = new mongoose.Schema({
     nearbyHospitals: { type: String, required: true },
     nearbyColleges: { type: String, required: true },
     likes: { type: Number, default: 0 },
-    postedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+    postedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    images: { type: [String], default: [] } // Array of image URLs
 });
 
 module.exports = mongoose.model('Property', PropertySchema);

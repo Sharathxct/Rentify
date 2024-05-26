@@ -37,9 +37,10 @@ export function LoginCard() {
               Authorization: `Bearer ${token}`,
             },
         } );
-
-        dispatch(login(res.data.user));
-        navigate("/");
+        if(res.data.user) {
+          dispatch(login(res.data.user));
+          navigate("/");
+        }
       } catch (error) {
         console.log(error);
       }
